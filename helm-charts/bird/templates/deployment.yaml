@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-birdapi
+  labels:
+    app: birdapi
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "http"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: birdapi
+  template:
+    metadata:
+      labels:
+        app: birdapi
+    spec:
+      securityContext:
+        fsGroup: 2000
+      containers:
+       - name: birdapi
+         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+         imagePullPolicy: {{ .Values.image.pullPolicy }}
+         ports:
+         - containerPort: {{ .Values.service.port }}
+         env:
+         - name: BIRDIMAGEAPI_SERVICE_URL
+           value: "http://{{ .Values.birdimageapiReleaseName }}-birdimageapi:4200"
+         resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+         livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.service.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+         readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ .Values.service.port }}
+          initialDelaySeconds: 3
+          periodSeconds: 5
+         securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+      restartPolicy: Always  
