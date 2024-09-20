@@ -1,12 +1,6 @@
 name: Build and Push Docker Images
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'bird/**'       
-      - 'birdImage/**'
   pull_request:
     branches:
       - main
@@ -37,7 +31,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push birdapi image
-      if: github.event_name == 'push' || github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v5
       with:
         context: ./bird
@@ -49,7 +43,7 @@ jobs:
           rdg5/birdapi:arm64
 
     - name: Build and push birdImage image
-      if: github.event_name == 'push' || github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v5
       with:
         context: ./birdImage
